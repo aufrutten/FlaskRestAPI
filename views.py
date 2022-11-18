@@ -1,6 +1,5 @@
 from flask import Blueprint, render_template, request, current_app
 from reportMonaco import report
-import pathlib
 
 simple_page = Blueprint('simple_page', __name__,
                         template_folder='templates',
