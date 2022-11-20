@@ -2,11 +2,6 @@ from unittest.mock import patch, MagicMock
 import pytest
 import os
 
-import sys
-import pathlib
-
-WORK_DIR_OF_PROJECT = pathlib.Path(__file__).parent.parent.parent
-sys.path.append(WORK_DIR_OF_PROJECT)
 from reportMonaco import parser_cli
 
 

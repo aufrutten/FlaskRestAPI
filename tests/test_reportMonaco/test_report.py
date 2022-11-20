@@ -1,11 +1,7 @@
 from unittest.mock import patch
 import pytest
 
-import sys
 import pathlib
-
-WORK_DIR_OF_PROJECT = pathlib.Path(__file__).parent.parent.parent
-sys.path.append(WORK_DIR_OF_PROJECT)
 
 from reportMonaco import report
 

@@ -1,8 +1,7 @@
 from flask import current_app
 from reportMonaco import report
 
-
-__doc_for_developers__ =\
+__doc_for_developers__ = \
     """
     style of write is SOLID, close for modification, and open for adding
     
@@ -25,12 +24,12 @@ class V1:
     __doc__ = """That parser for parsing data from reportMonaco, version 1"""
 
     @staticmethod
-    def get():
+    def get() -> dict:
         """api get request of HTTP, getting data from reportMonaco"""
         path_to_folder_with_data = current_app.config.get('path_to_folder')
         data, _ = report.build_report(path_to_folder_with_data)
         return data
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     V1.get()

@@ -1,57 +1,45 @@
+__all__ = ['API']
+
 from flask_restful import Resource
 from flask import request
 import json
+from dicttoxml import dicttoxml as dict_to_xml
 
 
-def dict_to_xml(data, root='XML'):
-    """function for convert dict:python in XML"""
-    xml = f'<{root}>'
-    if isinstance(data, dict):
-        for key, value in data.items():
-            xml += dict_to_xml(value, key)
+class Response:
 
-    elif isinstance(data, (list, tuple, set)):
-        for item in data:
-            xml += dict_to_xml(item, 'item')
+    def __init__(self, parser, version, method):
+        self.status_code = 200
+        self.message = ''
 
-    else:
-        xml += str(data)
+        self.method = method
 
-    xml += f'</{root}>'
-    return xml
+        self.parser = None
+        self.create_parser(parser, version)
 
+    def create_parser(self, parser, version):
+        try:
+            parser = __import__(f'{__package__}.{parser}').__dict__[parser].__dict__[version]
 
-def get_class_parser(parser, version):
-    """getting class of module, which class is version, and module that parser"""
+        except ModuleNotFoundError:
+            self.status_code = 404
+            self.message = 'you wrote uncorrected parser?'
 
-    import importlib
-    try:
-        # check if module and class exist
-        class_module = importlib.import_module(f'{__name__}.{parser}').__dict__[version]
+        except KeyError:
+            self.status_code = 404
+            self.message = 'you wrote uncorrected version for parser?'
 
-    except ModuleNotFoundError:
-        return {'status_code': 404, 'message': 'you wrote uncorrected parser?'}
-
-    except KeyError:
-        return {'status_code': 404, 'message': 'you wrote uncorrected version for parser?'}
-
-    else:
-        return {'status_code': 200, version: class_module}
-
-
-def return_response(version, parser, req_format, method):
-    """function for return response, check status_code and format in which must return"""
-
-    parser = get_class_parser(parser, version)
-    if parser['status_code'] == 200:
-        if req_format == 'JSON':
-            return json.dumps(parser[version].__dict__[method]())
-        elif req_format == 'XML':
-            return dict_to_xml(parser[version].__dict__[method]())
         else:
-            return json.dumps({'status_code': 404, 'message': 'you wrote uncorrected format, JSON or XML'})
-    else:
-        return json.dumps(parser)
+            self.status_code = 200
+            self.parser = parser
+
+    @property
+    def JSON(self):
+        return json.dumps(self.parser.__dict__[self.method]())
+
+    @property
+    def XML(self):
+        return dict_to_xml(self.parser.__dict__[self.method]()).decode('UTF-8')
 
 
 class API(Resource):
@@ -64,5 +52,16 @@ class API(Resource):
         if not (parser and version and req_format):
             return json.dumps({'status_code': 404, 'message': 'you forgot to specify required arguments'})
 
-        return return_response(version, parser, req_format, 'get')
+        response = Response(parser, version, 'get')
 
+        if response.status_code != 200:
+            return json.dumps({'status_code': response.status_code, 'message': response.message})
+
+        if req_format == 'JSON':
+            return response.JSON
+
+        elif req_format == 'XML':
+            return response.XML
+
+        else:
+            return json.dumps({'status_code': 404, 'message': 'you wrote uncorrected format, JSON or XML'})
