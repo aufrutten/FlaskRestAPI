@@ -9,7 +9,7 @@ from dicttoxml import dicttoxml as dict_to_xml
 class Response:
 
     def __init__(self, parser, version, method):
-        self.status_code = 200
+        self.status_code = 0
         self.message = ''
 
         self.method = method
